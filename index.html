@@ -185,51 +185,32 @@
         }
 
         async function translateToSwedish(text) {
-            // ===============================================================
-            // ▼▼▼ 在下方双引号内填入您的 Gemini API Key ▼▼▼
-            const apiKey = "AIzaSyCPSzA8_OHP8eR-2X2dEzlyW5CjMXaiet4";
-            // ▲▲▲ 在上方双引号内填入您的 Gemini API Key ▲▲▲
-            // ===============================================================
-
-            if (apiKey === "在此处粘贴您的GEMINI_API_KEY" || !apiKey) {
-                showNotification("请先在代码中设置您的 Gemini API Key。", 'error');
-                return;
-            }
-
             loadingSpinner.classList.remove('hidden');
             translationOutput.textContent = '';
             playButton.classList.add('hidden');
             hideNotification();
 
-            const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-05-20:generateContent?key=${apiKey}`;
-            const systemPrompt = "You are an expert translator. Translate the given Chinese text to Swedish. Provide only the direct Swedish translation, without any additional text, explanations, or quotation marks.";
-            const payload = {
-                contents: [{ parts: [{ text: text }] }],
-                systemInstruction: { parts: [{ text: systemPrompt }] },
-            };
-
             try {
-                const response = await fetch(apiUrl, {
+                // 前端现在调用我们自己的后端函数，而不是直接调用 Google API
+                const response = await fetch('/api/translate', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify(payload)
+                    body: JSON.stringify({ text: text }) // 在请求体中发送文本
                 });
 
-                if (!response.ok) {
-                    throw new Error(`API 请求失败，状态码：${response.status}`);
-                }
                 const result = await response.json();
-                const candidate = result.candidates?.[0];
 
-                if (candidate && candidate.content?.parts?.[0]?.text) {
-                    const translatedText = candidate.content.parts[0].text.trim();
-                    translationOutput.textContent = translatedText;
-                    if(translatedText) {
-                       playButton.classList.remove('hidden');
-                    }
-                } else {
-                    throw new Error("未能从API响应中获取有效的翻译结果。");
+                if (!response.ok) {
+                    // 使用我们后端函数返回的错误信息
+                    throw new Error(result.error || `请求失败，状态码：${response.status}`);
                 }
+                
+                const translatedText = result.translation;
+                translationOutput.textContent = translatedText;
+                if(translatedText) {
+                   playButton.classList.remove('hidden');
+                }
+                
             } catch (error) {
                 console.error("翻译时出错:", error);
                 showNotification(`翻译失败: ${error.message}`, 'error');
@@ -254,5 +235,3 @@
     </script>
 </body>
 </html>
-
-

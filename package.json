@@ -1,0 +1,11 @@
+{
+  "name": "secure-translator-app",
+  "version": "1.0.0",
+  "description": "A secure translator app using Vercel Serverless Functions.",
+  "main": "index.html",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "",
+  "license": "ISC"
+}
