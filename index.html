@@ -10,65 +10,69 @@
         body {
             font-family: 'Inter', 'Helvetica Neue', 'Arial', 'sans-serif';
         }
-        /* 自定义麦克风按钮动画 */
-        .mic-button.is-listening {
-            animation: pulse 1.5s infinite;
-        }
+        .mic-button.is-listening { animation: pulse 1.5s infinite; }
         @keyframes pulse {
-            0% {
-                box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.7);
-            }
-            70% {
-                box-shadow: 0 0 0 20px rgba(239, 68, 68, 0);
-            }
-            100% {
-                box-shadow: 0 0 0 0 rgba(239, 68, 68, 0);
-            }
+            0% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.7); }
+            70% { box-shadow: 0 0 0 20px rgba(239, 68, 68, 0); }
+            100% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0); }
         }
+        .lang-btn {
+            padding: 0.5rem 1rem; border-radius: 9999px; border: 1px solid #d1d5db;
+            background-color: transparent; color: #6b7280; transition: all 0.2s ease-in-out; font-weight: 500;
+        }
+        .lang-btn.active { background-color: #3b82f6; color: white; border-color: #3b82f6; }
+        .dark .lang-btn { border-color: #4b5563; color: #9ca3af; }
+        .dark .lang-btn.active { background-color: #60a5fa; color: #1f2937; border-color: #60a5fa; }
     </style>
 </head>
 <body class="bg-gray-100 dark:bg-gray-900 flex items-center justify-center min-h-screen transition-colors duration-500">
 
-    <div class="w-full max-w-2xl mx-auto p-6 md:p-8 bg-white dark:bg-gray-800 rounded-2xl shadow-2xl space-y-8">
+    <div class="w-full max-w-2xl mx-auto p-6 md:p-8 bg-white dark:bg-gray-800 rounded-2xl shadow-2xl space-y-6">
         <!-- 头部 -->
         <div class="text-center">
             <h1 class="text-3xl md:text-4xl font-bold text-gray-800 dark:text-white">老杨帮您来翻译</h1>
-            <p class="text-gray-500 dark:text-gray-400 mt-2">将您说的话实时翻译成瑞典语</p>
+            <p id="subtitle" class="text-gray-500 dark:text-gray-400 mt-2">为您生成地道的外语表达</p>
+        </div>
+
+        <!-- 语言选择器 -->
+        <div id="languageSelector" class="flex justify-center space-x-2 sm:space-x-4">
+            <button data-lang="Swedish" data-lang-name="瑞典语" data-code="sv-SE" class="lang-btn active">瑞典语</button>
+            <button data-lang="English" data-lang-name="英语" data-code="en-US" class="lang-btn">英语</button>
+            <button data-lang="Spanish" data-lang-name="西班牙语" data-code="es-ES" class="lang-btn">西班牙语</button>
         </div>
 
         <!-- 麦克风控制 -->
-        <div class="flex justify-center py-4">
+        <div class="flex justify-center py-2">
             <button id="micButton" class="mic-button w-24 h-24 bg-blue-600 hover:bg-blue-700 text-white rounded-full flex items-center justify-center transition-all duration-300 ease-in-out shadow-lg focus:outline-none focus:ring-4 focus:ring-blue-300 dark:focus:ring-blue-800">
-                <svg id="micIcon" class="w-12 h-12" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
-                    <path stroke-linecap="round" stroke-linejoin="round" d="M12 18.75a6 6 0 006-6v-1.5a6 6 0 00-12 0v1.5a6 6 0 006 6z" />
-                    <path stroke-linecap="round" stroke-linejoin="round" d="M19.5 12a7.5 7.5 0 11-15 0" />
-                </svg>
-                 <svg id="stopIcon" class="w-12 h-12 hidden" xmlns="http://www.w3.org/2000/svg" fill="currentColor" viewBox="0 0 16 16">
-                    <path d="M5 3.5h6A1.5 1.5 0 0 1 12.5 5v6a1.5 1.5 0 0 1-1.5 1.5H5A1.5 1.5 0 0 1 3.5 11V5A1.5 1.5 0 0 1 5 3.5z"/>
-                </svg>
+                <svg id="micIcon" class="w-12 h-12" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M12 18.75a6 6 0 006-6v-1.5a6 6 0 00-12 0v1.5a6 6 0 006 6z" /><path stroke-linecap="round" stroke-linejoin="round" d="M19.5 12a7.5 7.5 0 11-15 0" /></svg>
+                <svg id="stopIcon" class="w-12 h-12 hidden" xmlns="http://www.w3.org/2000/svg" fill="currentColor" viewBox="0 0 16 16"><path d="M5 3.5h6A1.5 1.5 0 0 1 12.5 5v6a1.5 1.5 0 0 1-1.5 1.5H5A1.5 1.5 0 0 1 3.5 11V5A1.5 1.5 0 0 1 5 3.5z"/></svg>
             </button>
         </div>
 
         <!-- 状态和结果区域 -->
-        <div class="space-y-6">
+        <div class="space-y-6 relative">
+             <div id="loadingSpinner" class="hidden absolute inset-0 bg-white dark:bg-gray-800 bg-opacity-80 flex justify-center items-center rounded-lg z-10 pt-10">
+                <div class="animate-spin rounded-full h-10 w-10 border-b-2 border-blue-600"></div>
+             </div>
             <!-- 识别结果 -->
             <div class="bg-gray-50 dark:bg-gray-700 p-4 rounded-lg min-h-[80px]">
-                <h2 class="text-sm font-semibold text-gray-500 dark:text-gray-400 mb-2">你说的话 (可编辑)：</h2>
-                <textarea id="userInput" class="w-full h-auto bg-transparent border-none focus:ring-0 resize-none text-gray-800 dark:text-gray-200 text-lg leading-relaxed" rows="3" placeholder="请点击麦克风说话，或在此输入文字..."></textarea>
+                <h2 class="text-sm font-semibold text-gray-500 dark:text-gray-400 mb-2">您想表达的内容 (可编辑)：</h2>
+                <textarea id="userInput" class="w-full h-auto bg-transparent border-none focus:ring-0 resize-none text-gray-800 dark:text-gray-200 text-lg leading-relaxed" rows="3" placeholder="请描述您想说的内容和情景..."></textarea>
             </div>
 
-            <!-- 翻译结果 -->
-            <div class="bg-gray-50 dark:bg-gray-700 p-4 rounded-lg min-h-[80px] relative">
-                 <h2 class="text-sm font-semibold text-gray-500 dark:text-gray-400 mb-2">瑞典语翻译：</h2>
-                 <p id="translationOutput" class="text-gray-800 dark:text-gray-200 text-lg leading-relaxed"></p>
-                 <div id="loadingSpinner" class="hidden absolute inset-0 bg-gray-50 dark:bg-gray-700 bg-opacity-80 flex justify-center items-center rounded-lg">
-                    <div class="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
-                 </div>
-                 <button id="playButton" class="hidden absolute top-4 right-4 text-gray-500 hover:text-blue-600 dark:text-gray-400 dark:hover:text-blue-400 transition-colors">
-                    <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-                      <path stroke-linecap="round" stroke-linejoin="round" d="M15.55 11.25l-5.625-3.375a1.125 1.125 0 00-1.688.938v6.75a1.125 1.125 0 001.688.938l5.625-3.375a1.125 1.125 0 000-1.876z" />
-                    </svg>
+            <!-- 生成的外语表达 -->
+            <div class="bg-blue-50 dark:bg-blue-900/30 p-4 rounded-lg min-h-[80px] relative">
+                 <h2 id="generatedLabel" class="text-sm font-semibold text-blue-800 dark:text-blue-300 mb-2">瑞典语表达：</h2>
+                 <p id="generatedOutput" class="text-blue-900 dark:text-blue-200 text-lg leading-relaxed font-medium"></p>
+                 <button id="playButton" class="hidden absolute top-4 right-4 text-blue-600 hover:text-blue-800 dark:text-blue-400 dark:hover:text-blue-200 transition-colors">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M15.55 11.25l-5.625-3.375a1.125 1.125 0 00-1.688.938v6.75a1.125 1.125 0 001.688.938l5.625-3.375a1.125 1.125 0 000-1.876z" /></svg>
                  </button>
+            </div>
+            
+            <!-- 中文意思 -->
+            <div class="bg-gray-50 dark:bg-gray-700 p-4 rounded-lg min-h-[60px]">
+                 <h2 class="text-sm font-semibold text-gray-500 dark:text-gray-400 mb-2">中文意思：</h2>
+                 <p id="chineseMeaningOutput" class="text-gray-600 dark:text-gray-300 text-base leading-relaxed"></p>
             </div>
              <div id="errorMessage" class="hidden text-center p-2 rounded-lg"></div>
         </div>
@@ -80,15 +84,22 @@
         const micIcon = document.getElementById('micIcon');
         const stopIcon = document.getElementById('stopIcon');
         const userInput = document.getElementById('userInput');
-        const translationOutput = document.getElementById('translationOutput');
         const loadingSpinner = document.getElementById('loadingSpinner');
         const errorMessage = document.getElementById('errorMessage');
         const playButton = document.getElementById('playButton');
+        const languageSelector = document.getElementById('languageSelector');
+        const subtitle = document.getElementById('subtitle');
+        const generatedLabel = document.getElementById('generatedLabel');
+        const generatedOutput = document.getElementById('generatedOutput');
+        const chineseMeaningOutput = document.getElementById('chineseMeaningOutput');
 
         // State
         let isListening = false;
         let final_transcript = '';
         let debounceTimer;
+        let targetLanguage = 'Swedish';
+        let targetLanguageName = '瑞典语';
+        let targetLangCode = 'sv-SE';
 
         // Speech Recognition Setup
         const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
@@ -111,20 +122,37 @@
             if (!isListening) {
                 const text = userInput.value.trim();
                 if (text) {
-                    debounceTimer = setTimeout(() => translateToSwedish(text), 1200);
+                    debounceTimer = setTimeout(() => getTranslation(text), 1500);
                 } else {
-                    translationOutput.textContent = '';
-                    playButton.classList.add('hidden');
+                    clearOutputs();
                 }
             }
         });
 
         playButton.addEventListener('click', () => {
-            const textToSpeak = translationOutput.textContent;
+            const textToSpeak = generatedOutput.textContent;
             if (textToSpeak && 'speechSynthesis' in window) {
                 const utterance = new SpeechSynthesisUtterance(textToSpeak);
-                utterance.lang = 'sv-SE';
+                utterance.lang = targetLangCode;
                 window.speechSynthesis.speak(utterance);
+            }
+        });
+
+        languageSelector.addEventListener('click', (e) => {
+            if (e.target.tagName === 'BUTTON' && !e.target.classList.contains('active')) {
+                targetLanguage = e.target.dataset.lang;
+                targetLanguageName = e.target.dataset.langName;
+                targetLangCode = e.target.dataset.code;
+
+                document.querySelector('.lang-btn.active').classList.remove('active');
+                e.target.classList.add('active');
+                subtitle.textContent = `为您生成地道的${targetLanguageName}表达`;
+                generatedLabel.textContent = `${targetLanguageName}表达：`;
+
+                const currentText = userInput.value.trim();
+                if (currentText && currentText !== '请开始说话...') {
+                    getTranslation(currentText);
+                }
             }
         });
 
@@ -132,27 +160,17 @@
         if (recognition) {
             recognition.onresult = (event) => {
                 let interim_transcript = '';
-                for (let i = event.resultIndex; i < event.results.length; ++i) {
-                    // 如果结果是最终的，就将其附加到我们的主文本记录中。
-                    if (event.results[i].isFinal) {
+                final_transcript = ''; // Reset to reconstruct from final results
+                for (let i = 0; i < event.results.length; ++i) {
+                     if (event.results[i].isFinal) {
                         final_transcript += event.results[i][0].transcript;
                     } else {
                         interim_transcript += event.results[i][0].transcript;
                     }
                 }
-                // 显示主文本记录以及任何当前的临时结果。
                 userInput.value = final_transcript + interim_transcript;
             };
-
-            recognition.onend = () => {
-                // 语音识别服务可能会超时。如果我们的应用仍处于“正在聆听”状态，
-                // 这意味着用户还没有点击“停止”。在这种情况下，我们应该
-                // 自动重启识别功能，以实现连续语音输入。
-                if (isListening) {
-                    recognition.start();
-                }
-            };
-            
+            recognition.onend = () => { if (isListening) recognition.start(); };
             recognition.onerror = (event) => {
                 showNotification(`语音识别错误: ${event.error}`, 'error');
                 stopRecognition();
@@ -165,13 +183,11 @@
             isListening = true;
             micButton.classList.add('is-listening', 'bg-red-600', 'hover:bg-red-700');
             micButton.classList.remove('bg-blue-600', 'hover:bg-blue-700');
-            micIcon.classList.add('hidden');
-            stopIcon.classList.remove('hidden');
+            micIcon.classList.add('hidden'); stopIcon.classList.remove('hidden');
             
             final_transcript = '';
-            userInput.value = '请开始说话...';
-            translationOutput.textContent = '';
-            playButton.classList.add('hidden');
+            userInput.value = '请开始描述情景...';
+            clearOutputs();
             hideNotification();
             clearTimeout(debounceTimer);
             recognition.start();
@@ -182,57 +198,60 @@
             isListening = false;
             micButton.classList.remove('is-listening', 'bg-red-600', 'hover:bg-red-700');
             micButton.classList.add('bg-blue-600', 'hover:bg-blue-700');
-            micIcon.classList.remove('hidden');
-            stopIcon.classList.add('hidden');
+            micIcon.classList.remove('hidden'); stopIcon.classList.add('hidden');
             recognition.stop();
 
-            const textToTranslate = userInput.value.trim();
-            if (textToTranslate && textToTranslate !== '请开始说话...') {
-                translateToSwedish(textToTranslate);
-            }
+            // Wait a moment for final results to process
+            setTimeout(() => {
+                const textToTranslate = userInput.value.trim();
+                if (textToTranslate && textToTranslate !== '请开始描述情景...') {
+                    getTranslation(textToTranslate);
+                }
+            }, 200);
+        }
+        
+        function clearOutputs() {
+            generatedOutput.textContent = '';
+            chineseMeaningOutput.textContent = '';
+            playButton.classList.add('hidden');
         }
 
-        async function translateToSwedish(text) {
+        async function getTranslation(text) {
             loadingSpinner.classList.remove('hidden');
-            translationOutput.textContent = '';
-            playButton.classList.add('hidden');
+            clearOutputs();
             hideNotification();
 
             try {
-                // 前端现在调用我们自己的后端函数，而不是直接调用 Google API
                 const response = await fetch('/api/translate', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ text: text }) // 在请求体中发送文本
+                    body: JSON.stringify({ text: text, language: targetLanguage })
                 });
 
                 const result = await response.json();
 
                 if (!response.ok) {
-                    // 使用我们后端函数返回的错误信息
                     throw new Error(result.error || `请求失败，状态码：${response.status}`);
                 }
                 
-                const translatedText = result.translation;
-                translationOutput.textContent = translatedText;
-                if(translatedText) {
+                generatedOutput.textContent = result.generated_phrase;
+                chineseMeaningOutput.textContent = result.chinese_translation;
+
+                if(result.generated_phrase) {
                    playButton.classList.remove('hidden');
                 }
                 
             } catch (error) {
                 console.error("翻译时出错:", error);
-                showNotification(`翻译失败: ${error.message}`, 'error');
+                showNotification(`生成失败: ${error.message}`, 'error');
             } finally {
                 loadingSpinner.classList.add('hidden');
             }
         }
         
-        // UI Notification Functions
         function showNotification(message, type = 'error') {
             errorMessage.textContent = message;
-            errorMessage.classList.remove('hidden');
-            // Reset classes
-            errorMessage.classList.remove('bg-red-100', 'text-red-700', 'dark:bg-red-900', 'dark:text-red-300');
+            errorMessage.classList.remove('hidden', 'bg-red-100', 'text-red-700');
             errorMessage.classList.add('bg-red-100', 'text-red-700', 'dark:bg-red-900', 'dark:text-red-300');
         }
 
@@ -243,5 +262,4 @@
     </script>
 </body>
 </html>
-
 
