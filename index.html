@@ -29,9 +29,12 @@
 
     <div class="w-full max-w-2xl mx-auto p-6 md:p-8 bg-white dark:bg-gray-800 rounded-2xl shadow-2xl space-y-6">
         <!-- 头部 -->
-        <div class="text-center">
-            <h1 class="text-3xl md:text-4xl font-bold text-gray-800 dark:text-white">老杨帮您来翻译</h1>
-            <p id="subtitle" class="text-gray-500 dark:text-gray-400 mt-2">为您生成地道的外语表达</p>
+        <div class="flex items-center justify-center gap-4 sm:gap-5">
+            <img src="https://github.com/tomyangse/laoyangshuo/blob/main/laoyang.jpeg?raw=true" alt="老杨头像" class="w-16 h-16 sm:w-20 sm:h-20 rounded-full shadow-lg border-2 border-white dark:border-gray-700">
+            <div class="text-left">
+                <h1 class="text-3xl md:text-4xl font-bold text-gray-800 dark:text-white">老杨帮您来翻译</h1>
+                <p id="subtitle" class="text-gray-500 dark:text-gray-400 mt-1">为您生成地道的外语表达</p>
+            </div>
         </div>
 
         <!-- 语言选择器 -->
@@ -160,14 +163,16 @@
         if (recognition) {
             recognition.onresult = (event) => {
                 let interim_transcript = '';
-                final_transcript = ''; // Reset to reconstruct from final results
-                for (let i = 0; i < event.results.length; ++i) {
-                     if (event.results[i].isFinal) {
+                // 循环只处理最新的识别结果
+                for (let i = event.resultIndex; i < event.results.length; ++i) {
+                    // 如果结果是最终的，就将其附加到我们的主文本记录中
+                    if (event.results[i].isFinal) {
                         final_transcript += event.results[i][0].transcript;
                     } else {
                         interim_transcript += event.results[i][0].transcript;
                     }
                 }
+                // 显示累积的最终结果和当前的临时结果
                 userInput.value = final_transcript + interim_transcript;
             };
             recognition.onend = () => { if (isListening) recognition.start(); };
@@ -262,4 +267,5 @@
     </script>
 </body>
 </html>
+
 
