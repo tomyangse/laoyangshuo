@@ -162,20 +162,32 @@
         // Speech Recognition Handlers
         if (recognition) {
             recognition.onresult = (event) => {
+                // 'final_transcript' now holds the stable text from before this recognition event.
+                // We will build the new "interim" part from the latest results.
                 let interim_transcript = '';
-                // 循环只处理最新的识别结果
                 for (let i = event.resultIndex; i < event.results.length; ++i) {
-                    // 如果结果是最终的，就将其附加到我们的主文本记录中
-                    if (event.results[i].isFinal) {
-                        final_transcript += event.results[i][0].transcript;
-                    } else {
-                        interim_transcript += event.results[i][0].transcript;
-                    }
+                    interim_transcript += event.results[i][0].transcript;
                 }
-                // 显示累积的最终结果和当前的临时结果
+
+                // Update the display with the stable part plus the new live part.
+                // This prevents duplication by not mixing old state with new results.
                 userInput.value = final_transcript + interim_transcript;
             };
-            recognition.onend = () => { if (isListening) recognition.start(); };
+
+            recognition.onend = () => {
+                if (isListening) {
+                    // A speech recognition session has ended (e.g., due to a pause).
+                    // We "commit" the current text in the textarea to our stable `final_transcript` variable.
+                    const currentText = userInput.value.trim();
+                     if (currentText && currentText !== '请开始描述情景...') {
+                        // Add a space at the end of the committed text for better sentence separation.
+                        final_transcript = currentText + ' ';
+                    }
+                    // Automatically restart the recognition to continue listening for the next sentence.
+                    recognition.start();
+                }
+            };
+            
             recognition.onerror = (event) => {
                 showNotification(`语音识别错误: ${event.error}`, 'error');
                 stopRecognition();
@@ -267,5 +279,6 @@
     </script>
 </body>
 </html>
+
 
 
